@@ -3,6 +3,7 @@ package com.example.notification_store
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import com.example.notification_store.MainActivity
 
 class NotificationListener : NotificationListenerService() {
 
@@ -15,7 +16,6 @@ class NotificationListener : NotificationListenerService() {
             val packageName = sbn.packageName
             val timestamp = sbn.postTime
 
-            // Ignore empty notifications
             if (title.isEmpty() && text.isEmpty()) return
 
             Log.d(
@@ -23,25 +23,19 @@ class NotificationListener : NotificationListenerService() {
                 "From: $packageName | $title | $text"
             )
 
-            // Send data to Flutter via MethodChannel
-            if (::MainActivity.methodChannel.isInitialized) {
-                MainActivity.methodChannel.invokeMethod(
-                    "saveNotification",
-                    mapOf(
-                        "package" to packageName,
-                        "title" to title,
-                        "text" to text,
-                        "timestamp" to timestamp
-                    )
+            // SAFE nullable check
+            MainActivity.methodChannel?.invokeMethod(
+                "saveNotification",
+                mapOf(
+                    "package" to packageName,
+                    "title" to title,
+                    "text" to text,
+                    "timestamp" to timestamp
                 )
-            }
+            )
 
         } catch (e: Exception) {
             Log.e("NotificationListener", "Error reading notification", e)
         }
-    }
-
-    override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        // Optional: handle removed notifications if needed
     }
 }
